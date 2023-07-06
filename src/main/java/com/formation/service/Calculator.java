@@ -9,4 +9,7 @@ public class Calculator {
 		return a+b;
 	}
 
+	public int mutiply(int a, int b) {
+		return a*b;
+	}
 }
