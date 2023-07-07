@@ -2,15 +2,20 @@ pipeline {
   agent any
   
   environment {
-registry = "adceri/demo-boot"
-registryCredential = 'docker-hub'
-    }
+    registry = "adceri/demo-boot"
+    registryCredential = 'docker-hub'
+    containerName = 'demo-boot' // Nom du container 
+    appPort = '8080'
+    testPort = '8180'
+    prodIP = '13.37.106.112' // IP public de l'instance de production sur aws
+    prodPort = '80'
+  }
  
-    stages{
+  stages {
     stage('Build Artifact') {
       steps {
         sh "mvn clean package -DskipTests=true"
-        archive 'target/*.jar' //so that they can be downloaded later
+        archive 'target/*.jar' // Pour pouvoir les télécharger ultérieurement
       }
     }
     
@@ -26,47 +31,52 @@ registryCredential = 'docker-hub'
         }
       }
     }
+    
     stage('Docker Build and Push') {
-steps {
-withDockerRegistry([credentialsId: "docker-hub", url: ""]) {
-sh 'printenv'
-sh 'docker build -t $registry:$BUILD_NUMBER .'
-sh 'docker push $registry:$BUILD_NUMBER'
-         }
+      steps {
+        withDockerRegistry([credentialsId: "docker-hub", url: ""]) {
+          sh 'printenv'
+          sh 'docker build -t $registry:$BUILD_NUMBER .'
+          sh 'docker push $registry:$BUILD_NUMBER'
         }
+      }
     }
     
     stage('Remove Unused docker image') {
-steps{
-sh "docker rmi $registry:$BUILD_NUMBER"
-}
-}
+      steps {
+        sh "docker rmi $registry:$BUILD_NUMBER"
+      }
+    }
+    
     stage('Deploy to test env') {
-steps{
-sh"docker stop demo-boot || true"
-sh"docker rm demo-boot ||true"
-sh "docker run -d -p 8180:8080 --name demo-boot $registry:$BUILD_NUMBER"
-
-}
-}
-stage('Production env'){
-
-steps{
-	input 'Do you approve deployment?'
-	echo 'Going into production...'
-}
-
-}
+      steps {
+        sh "docker stop $containerName || true"
+        sh "docker rm $containerName || true"
+        sh "docker run -d -p $testPort:$appPort --name $containerName $registry:$BUILD_NUMBER"
+      }
+    }
+    
+    stage('Production env') {
+      steps {
+        input 'Do you approve deployment?'
+        echo 'Going into production...'
+      }
+    }
+    
     stage('Deploy to prod env') {
-steps{
-sh"docker  -H 13.37.106.112 stop demo-boot || true"
-sh"docker  -H 13.37.106.112 rm demo-boot ||true"
-sh "docker -H 13.37.106.112 run -d -p 80:8080 --name demo-boot $registry:$BUILD_NUMBER"
-
-}
-}
-
-
-
-}
+      steps {
+        sh "docker -H $prodIP stop $containerName || true"
+        sh "docker -H $prodIP rm $containerName || true"
+        sh "docker -H $prodIP run -d -p $prodPort:$appPort --name $containerName $registry:$BUILD_NUMBER"
+      }
+    }
+    
+    stage('Cleaning test env') {
+      steps {
+        sh "docker stop $containerName || true"
+        sh "docker rm $containerName || true"
+        sh "docker rmi (docker images -aq) -f"
+      }
+    }
+  }
 }
