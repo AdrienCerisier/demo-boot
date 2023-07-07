@@ -6,7 +6,7 @@ registry = "adceri/demo-boot"
 registryCredential = 'docker-hub'
     }
  
-    
+    stages{
     stage('Build Artifact') {
       steps {
         sh "mvn clean package -DskipTests=true"
@@ -47,6 +47,7 @@ sh"docker stop demo-boot || true"
 sh"docker rm demo-boot ||true"
 sh "docker run -d -p 8180:8080 --name demo-boot $registry:$BUILD_NUMBER"
 
+}
 }
 }
 }
