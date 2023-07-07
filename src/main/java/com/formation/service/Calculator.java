@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
+
 @Service
 public class Calculator {
 	
@@ -14,5 +15,8 @@ public class Calculator {
 
 	public int mutiply(int a, int b) {
 		return a*b;
+	}
+	public int divide(int a, int b) {
+		return a/b;
 	}
 }
