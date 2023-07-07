@@ -50,4 +50,3 @@ sh "docker run -d -p 8180:8080 --name demo-boot $registry:$BUILD_NUMBER"
 }
 }
 }
-}
