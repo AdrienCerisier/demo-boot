@@ -19,7 +19,7 @@ registryCredential = 'docker-hub'
         sh "mvn test"
       }
       
-      post {
+      post {		
         always {
           junit 'target/surefire-reports/*.xml'
           jacoco execPattern: 'target/jacoco.exec'
@@ -57,5 +57,16 @@ steps{
 }
 
 }
+    stage('Deploy to prod env') {
+steps{
+sh"docker  -H 13.37.106.112 stop demo-boot || true"
+sh"docker  -H 13.37.106.112 rm demo-boot ||true"
+sh "docker -H 13.37.106.112 run -d -p 80:8080 --name demo-boot $registry:$BUILD_NUMBER"
+
+}
+}
+
+
+
 }
 }
