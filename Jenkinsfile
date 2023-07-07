@@ -49,5 +49,13 @@ sh "docker run -d -p 8180:8080 --name demo-boot $registry:$BUILD_NUMBER"
 
 }
 }
+stage('Production env'){
+
+steps{
+	input 'Do you approve deployment?'
+	echo 'Going into production...'
+}
+
+}
 }
 }
